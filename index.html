@@ -1,349 +1,115 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Control Buses">
-<meta name="theme-color" content="#0a0f1e">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<title>Control de Buses</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #07090f;
-    --surface: #0e1220;
-    --surface2: #151b2e;
-    --border: #1e2840;
-    --accent: #3b82f6;
-    --accent2: #6366f1;
-    --green: #10b981;
-    --red: #ef4444;
-    --amber: #f59e0b;
-    --text: #e8edf8;
-    --muted: #6b7a99;
-    --card-shadow: 0 4px 24px rgba(0,0,0,0.4);
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100svh;
-    overflow-x: hidden;
-    font-size: 15px;
-  }
-
-  /* ── SCREENS ── */
-  .screen { display: none; min-height: 100svh; flex-direction: column; }
-  .screen.active { display: flex; }
-
-  /* ── TOP BAR ── */
-  .topbar {
-    padding: 16px 20px 14px;
-    display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    position: sticky; top: 0; z-index: 10;
-  }
-  .topbar-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 17px; font-weight: 700;
-    letter-spacing: -0.3px;
-  }
-  .topbar-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
-  .icon-btn {
-    width: 38px; height: 38px; border-radius: 10px;
-    background: var(--surface2); border: 1px solid var(--border);
-    color: var(--text); font-size: 16px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: background 0.15s;
-  }
-  .icon-btn:active { background: var(--border); }
-
-  /* ── CONTENT ── */
-  .content { flex: 1; padding: 20px; overflow-y: auto; }
-  .content-tight { flex: 1; padding: 16px; overflow-y: auto; }
-
-  /* ── BOTTOM NAV ── */
-  .bottom-nav {
-    display: flex; border-top: 1px solid var(--border);
-    background: var(--surface); padding-bottom: env(safe-area-inset-bottom);
-  }
-  .nav-item {
-    flex: 1; padding: 12px 8px 10px;
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    cursor: pointer; color: var(--muted); transition: color 0.15s;
-    font-size: 10px; font-family: 'DM Sans', sans-serif; font-weight: 500;
-  }
-  .nav-item.active { color: var(--accent); }
-  .nav-icon { font-size: 20px; }
-
-  /* ── CARDS ── */
-  .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 16px; margin-bottom: 12px;
-    box-shadow: var(--card-shadow);
-  }
-  .card-sm {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 10px; padding: 12px; margin-bottom: 8px;
-  }
-
-  /* ── BUTTONS ── */
-  .btn {
-    width: 100%; padding: 15px; border-radius: 12px; border: none;
-    font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
-    cursor: pointer; transition: all 0.15s; letter-spacing: 0.2px;
-  }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: white;
-  }
-  .btn-primary:active { opacity: 0.85; transform: scale(0.98); }
-  .btn-secondary {
-    background: var(--surface2); color: var(--text);
-    border: 1px solid var(--border);
-  }
-  .btn-green { background: var(--green); color: white; }
-  .btn-danger { background: var(--red); color: white; }
-  .btn-sm {
-    padding: 10px 16px; width: auto; font-size: 13px;
-    border-radius: 8px;
-  }
-
-  /* ── FORM ELEMENTS ── */
-  label {
-    display: block; font-size: 12px; font-weight: 500;
-    color: var(--muted); margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase;
-  }
-  input[type="text"], input[type="password"], input[type="number"], select {
-    width: 100%; padding: 14px 16px; background: var(--surface2);
-    border: 1px solid var(--border); border-radius: 10px; color: var(--text);
-    font-family: 'DM Sans', sans-serif; font-size: 16px;
-    outline: none; transition: border-color 0.15s; margin-bottom: 14px;
-    appearance: none; -webkit-appearance: none;
-  }
-  input:focus, select:focus { border-color: var(--accent); }
-  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7a99' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; }
-
-  /* ── BADGES ── */
-  .badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
-  }
-  .badge-green { background: rgba(16,185,129,0.15); color: var(--green); }
-  .badge-red { background: rgba(239,68,68,0.15); color: var(--red); }
-  .badge-blue { background: rgba(59,130,246,0.15); color: var(--accent); }
-  .badge-amber { background: rgba(245,158,11,0.15); color: var(--amber); }
-
-  /* ── DIVIDER ── */
-  .divider { height: 1px; background: var(--border); margin: 16px 0; }
-
-  /* ── STAT GRID ── */
-  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-  .stat-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; padding: 14px;
-  }
-  .stat-value {
-    font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800;
-    line-height: 1; margin-bottom: 4px;
-  }
-  .stat-label { font-size: 11px; color: var(--muted); font-weight: 500; }
-
-  /* ── BUS PROGRESS ── */
-  .bus-item { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
-  .bus-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .bus-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
-  .bus-route { font-size: 11px; color: var(--muted); margin-top: 1px; }
-  .progress-bar { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
-  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
-  .bus-counts { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--muted); }
-
-  /* ── REGISTRO ITEM ── */
-  .reg-item {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .reg-name { font-size: 14px; font-weight: 500; }
-  .reg-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .reg-right { text-align: right; }
-
-  /* ── CODE DISPLAY ── */
-  .code-display {
-    font-family: 'DM Mono', monospace;
-    font-size: 52px; font-weight: 500;
-    letter-spacing: 12px; text-align: center;
-    color: var(--accent); padding: 24px;
-    background: var(--surface2); border-radius: 16px;
-    border: 1px solid var(--border); margin: 20px 0;
-  }
-
-  /* ── LOGIN ── */
-  .login-screen {
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    min-height: 100svh; padding: 32px 24px;
-    background: radial-gradient(ellipse at top, #0f1a3a 0%, var(--bg) 60%);
-  }
-  .login-logo {
-    font-family: 'Syne', sans-serif; font-size: 52px; font-weight: 800;
-    margin-bottom: 8px; text-align: center;
-  }
-  .login-sub { color: var(--muted); font-size: 14px; text-align: center; margin-bottom: 48px; }
-  .login-form { width: 100%; max-width: 360px; }
-
-  /* ── BOARDING (PASAJERO) ── */
-  .boarding-hero {
-    text-align: center; padding: 28px 20px 20px;
-  }
-  .boarding-icon { font-size: 56px; margin-bottom: 12px; }
-  .boarding-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 6px; }
-  .boarding-sub { color: var(--muted); font-size: 14px; }
-
-  /* ── RESULT FEEDBACK ── */
-  .result-screen {
-    position: fixed; inset: 0; z-index: 100;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 40px; text-align: center;
-    opacity: 0; pointer-events: none; transition: opacity 0.3s;
-  }
-  .result-screen.show { opacity: 1; pointer-events: all; }
-  .result-icon { font-size: 80px; margin-bottom: 16px; }
-  .result-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 8px; }
-  .result-sub { font-size: 15px; color: var(--muted); margin-bottom: 32px; }
-  .result-ok { background: radial-gradient(ellipse at center, rgba(16,185,129,0.15) 0%, var(--bg) 70%); }
-  .result-warn { background: radial-gradient(ellipse at center, rgba(245,158,11,0.15) 0%, var(--bg) 70%); }
-  .result-error { background: radial-gradient(ellipse at center, rgba(239,68,68,0.15) 0%, var(--bg) 70%); }
-
-  /* ── ALERT ── */
-  .alert { padding: 12px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 14px; }
-  .alert-red { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
-  .alert-green { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
-  .alert-blue { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: #93c5fd; }
-
-  /* ── FILE INPUT ── */
-  .file-label {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 8px; padding: 24px; border: 2px dashed var(--border); border-radius: 12px;
-    cursor: pointer; color: var(--muted); font-size: 13px; transition: border-color 0.15s;
-    text-align: center;
-  }
-  .file-label:hover { border-color: var(--accent); }
-  input[type="file"] { display: none; }
-
-  /* ── TABS ── */
-  .tabs { display: flex; background: var(--surface2); border-radius: 10px; padding: 3px; margin-bottom: 16px; }
-  .tab { flex: 1; padding: 9px; text-align: center; font-size: 13px; font-weight: 500; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all 0.15s; }
-  .tab.active { background: var(--surface); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-
-  /* ── MISC ── */
-  .section-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
-  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
-  .empty-icon { font-size: 40px; margin-bottom: 10px; }
-  .row { display: flex; gap: 10px; }
-  .row .btn { flex: 1; }
-  
-  /* ── ANIMATIONS ── */
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-  .fade-up { animation: fadeUp 0.35s ease forwards; }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-  .pulse { animation: pulse 2s ease-in-out infinite; }
-
-  /* ── RUT HINT ── */
-  .rut-hint { font-size: 11px; color: var(--muted); margin-top: -10px; margin-bottom: 14px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Control de Buses QR</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        :root { --bg: #0a0f1e; --accent: #3b82f6; --text: #e8edf8; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; text-align: center; }
+        .screen { display: none; padding: 20px; flex-direction: column; min-height: 100vh; }
+        .active { display: flex; }
+        .btn { padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 10px; }
+        .btn-primary { background: var(--accent); color: white; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; background: #151b2e; color: white; box-sizing: border-box; }
+        #reader { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
+        .status-ok { color: #10b981; font-size: 24px; font-weight: bold; }
+    </style>
 </head>
 <body>
 
-<div id="loginScreen" class="login-screen">
-  <div class="login-logo">🚌</div>
-  <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:4px">Control Buses</div>
-  <div class="login-sub">Sistema de gestión de embarque</div>
-  <div class="login-form">
-    <label>Contraseña de administrador</label>
-    <input type="password" id="loginPwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
-    <div id="loginErr" class="alert alert-red" style="display:none">Contraseña incorrecta</div>
-    <button class="btn btn-primary" onclick="doLogin()">Entrar como Admin</button>
-    <div class="divider"></div>
-    <button class="btn btn-secondary" onclick="goPassenger()">Soy Pasajero — Registrar embarque</button>
-  </div>
+<div id="homeScreen" class="screen active">
+    <h1>🚌 Control Buses</h1>
+    <button class="btn btn-primary" onclick="showScreen('passengerScreen')">Soy Pasajero - Registrar</button>
+    <button class="btn" style="background:#1e2840; color:white;" onclick="showScreen('loginScreen')">Admin</button>
 </div>
 
-<div id="resultOverlay" class="result-screen">
-  <div class="result-icon" id="resultIcon"></div>
-  <div class="result-title" id="resultTitle"></div>
-  <div class="result-sub" id="resultSub"></div>
-  <button class="btn btn-secondary btn-sm" onclick="hideResult()" style="width:180px">← Volver</button>
+<div id="passengerScreen" class="screen">
+    <h2>Registro de Pasajero</h2>
+    <input type="text" id="passengerRut" placeholder="Ingresa tu RUT (ej: 12345678-9)">
+    <div id="reader" style="display:none;"></div>
+    <button id="startScanBtn" class="btn btn-primary" onclick="startScanner()">Capturar QR del Bus</button>
+    <div id="resultMsg" class="status-ok"></div>
+    <button class="btn" onclick="location.reload()">Volver</button>
 </div>
 
-<div id="adminScreen" class="screen">
-  <div class="topbar">
-    <div>
-      <div class="topbar-title">Panel Admin</div>
-      <div class="topbar-sub" id="adminDateSub">Hoy</div>
-    </div>
-    <div style="display:flex;gap:8px">
-      <div class="icon-btn" onclick="exportCSV()" title="Exportar">⬇️</div>
-      <div class="icon-btn" onclick="logout()">🔒</div>
-    </div>
-  </div>
+<div id="loginScreen" class="screen">
+    <h2>Acceso Admin</h2>
+    <input type="password" id="adminPass" placeholder="Contraseña">
+    <button class="btn btn-primary" onclick="checkAdmin()">Entrar como Admin</button>
+    <button class="btn" onclick="showScreen('homeScreen')">Cancelar</button>
+</div>
 
-  <div class="content" id="adminContent">
-    <div class="tabs">
-      <div class="tab active" onclick="adminTab('panel',this)">Panel</div>
-      <div class="tab" onclick="adminTab('registros',this)">Registros</div>
-      <div class="tab" onclick="adminTab('codigo',this)">Código</div>
-      <div class="tab" onclick="adminTab('config',this)">Config</div>
+<div id="adminPanel" class="screen">
+    <h2>Panel de Buses</h2>
+    <p>Selecciona un bus para ver el listado de hoy:</p>
+    <div id="busButtons">
+        <button class="btn btn-primary" onclick="viewBus('Bus 1')">Ver Bus 1</button>
+        <button class="btn btn-primary" onclick="viewBus('Bus 2')">Ver Bus 2</button>
+        <button class="btn btn-primary" onclick="viewBus('Bus 3')">Ver Bus 3</button>
+        <button class="btn btn-primary" onclick="viewBus('Bus 4')">Ver Bus 4</button>
     </div>
+    <div id="listado"></div>
+    <button class="btn" onclick="location.reload()">Cerrar Sesión</button>
+</div>
 
-    <div id="tab-panel">
-      <div class="stat-grid">
-        <div class="stat-card">
-          <div class="stat-value" id="statTotal" style="color:var(--accent)">0</div>
-          <div class="stat-label">Embarcaron hoy</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="statWrong" style="color:var(--red)">0</div>
-          <div class="stat-label">Bus incorrecto</div>
-        </div>
-      </div>
-      <div class="section-title">Buses</div>
-      <div id="busCards"></div>
-    </div>
+<script>
+    let html5QrCode;
 
-    <div id="tab-registros" style="display:none">
-      <div class="section-title">Registros del día</div>
-      <div id="regList">
-        <div class="empty-state"><div class="empty-icon">📋</div>Sin registros aún</div>
-      </div>
-    </div>
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
 
-    <div id="tab-codigo" style="display:none">
-      <div class="card" style="text-align:center">
-        <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:6px">Código del día</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Comparte este código con los pasajeros cada mañana</div>
-        <div class="code-display" id="todayCode">----</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:16px" id="codeDate"></div>
-        <button class="btn btn-primary" onclick="genNewCode()">🔄 Generar nuevo código</button>
-      </div>
-    </div>
+    function startScanner() {
+        const rut = document.getElementById('passengerRut').value;
+        if (!rut) return alert("Por favor, ingresa tu RUT primero");
 
-    <div id="tab-config" style="display:none">
-      <div class="section-title">Pasajeros</div>
-      <div class="card">
-        <div style="font-size:13px;color:var(--muted);margin-bottom:12px" id="passCountInfo">No hay pasajeros cargados</div>
-        <label for="xlsxFile" class="file-label">
-          <span style="font-size:24px">📂</span>
-          <span>Cargar Excel de pasajeros</span>
-          <span style="font-size:11px">RUT · NOMBRE · BUS_ASIGNADO</span>
-        </label>
-        <input type="file" id="xlsxFile" accept=".xlsx,.xls,.csv" onchange="loadPassengers(this)">
+        document.getElementById('reader').style.display = 'block';
+        document.getElementById('startScanBtn').style.display = 'none';
+
+        html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            { fps: 10, qrbox: 250 },
+            (decodedText) => { // decodedText será el nombre del bus que tenga el QR
+                sendData(rut, decodedText);
+                html5QrCode.stop();
+                document.getElementById('reader').style.display = 'none';
+            }
+        );
+    }
+
+    function sendData(rut, bus) {
+        document.getElementById('resultMsg').innerHTML = "⌛ Registrando...";
+        
+        // AQUÍ CONECTAREMOS CON TU GOOGLE SHEETS
+        const url = "TU_URL_DE_GOOGLE_APPS_SCRIPT"; 
+
+        fetch(url, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rut: rut, bus: bus, fecha: new Date().toLocaleString() })
+        }).then(() => {
+            document.getElementById('resultMsg').innerHTML = "✅ REGISTRADO / CHECK";
+        });
+    }
+
+    function checkAdmin() {
+        if (document.getElementById('adminPass').value === "admin123") {
+            showScreen('adminPanel');
+        } else {
+            alert("Contraseña incorrecta");
+        }
+    }
+
+    function viewBus(busName) {
+        alert("Consultando registros de " + busName + " en Google Sheets...");
+        // Aquí podrías abrir directamente tu Google Sheet para ver el listado
+        window.open("URL_DE_TU_HOJA_DE_CALCULO_PARA_VER_LISTA", "_blank");
+    }
+</script>
+</body>
+</html>

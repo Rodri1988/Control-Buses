@@ -3,24 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BusQR - Sistema de Embarque</title>
+    <title>Sistema de Control de Embarque</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --accent: #3b82f6; --green: #10b981; --text: #f8fafc; }
+        :root { --bg: #0f172a; --card: #1e293b; --accent: #3b82f6; --green: #10b981; --red: #ef4444; --text: #f8fafc; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 400px; }
         .card { background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); text-align: center; margin-top: 20px; border: 1px solid #334155; }
         h1 { font-size: 1.6rem; margin-bottom: 5px; color: white; }
-        input { width: 100%; padding: 14px; margin: 15px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; font-size: 16px; outline: none; }
+        input { width: 100%; padding: 14px; margin: 15px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; font-size: 16px; outline: none; text-align: center; }
         input:focus { border-color: var(--accent); }
         .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
         .btn-qr { background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-qr:active { transform: scale(0.98); }
         .btn-admin { background: transparent; color: #94a3b8; margin-top: 30px; font-size: 14px; text-decoration: underline; }
         #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-top: 15px; display: none; border: 2px solid var(--accent); }
-        .success-mark { display: none; color: var(--green); font-size: 60px; margin-top: 20px; animation: scaleUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes scaleUp { from { transform: scale(0); } to { transform: scale(1); } }
-        .status-text { margin-top: 15px; font-weight: 600; min-height: 24px; }
+        .success-mark { display: none; color: var(--green); font-size: 60px; margin-top: 20px; }
+        .status-text { margin-top: 15px; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -29,9 +27,9 @@
         <div class="card">
             <div style="font-size: 50px; margin-bottom: 10px;">🚌</div>
             <h1>Control de Buses</h1>
-            <p style="color: #94a3b8; font-size: 14px;">Ingresa tu RUT para comenzar el embarque</p>
+            <p style="color: #94a3b8; font-size: 14px;">Ingresa tu RUT sin puntos y con guion</p>
             
-            <input type="text" id="rut" placeholder="Ej: 12.345.678-9" autocomplete="off">
+            <input type="text" id="rut" placeholder="Ej: 12345678-9" autocomplete="off">
             
             <div id="reader"></div>
             
@@ -43,24 +41,21 @@
             <p id="msg" class="status-text"></p>
         </div>
         
-        <button class="btn btn-admin" onclick="verAdmin()">Acceso Mauricio (Admin)</button>
+        <button class="btn btn-admin" onclick="verAdmin()">Acceso Admin</button>
     </div>
 
     <div class="container" id="view-admin" style="display:none;">
         <div class="card">
-            <div style="font-size: 40px; margin-bottom: 10px;">🔐</div>
-            <h2>Panel Mauricio</h2>
-            <p style="color: #94a3b8; font-size: 14px; margin-bottom: 20px;">Ingresa la clave para ver el listado</p>
-            <input type="password" id="pass" placeholder="Contraseña de Administrador">
-            <button class="btn btn-qr" onclick="login()">ENTRAR AL LISTADO</button>
+            <h2>Panel de Control</h2>
+            <input type="password" id="pass" placeholder="Contraseña Admin">
+            <button class="btn btn-qr" onclick="login()">ENTRAR</button>
             <button class="btn btn-admin" style="text-decoration:none;" onclick="location.reload()">← VOLVER</button>
         </div>
     </div>
 
     <script>
-        // CONFIGURACIÓN DE TUS ENLACES REALES
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5h1bxjdxggEhmS2fbzU3Gkx2UNLDZtaxtsDZ9tX5MGgHC3pedLk3P5l80KL9qtgJgAA/exec"; 
-        const SHEET_URL = "https://docs.google.com/spreadsheets/d/1PUd7rDu4JxWmDTauXKIWUtL-bQaqnquOlsY6xNpTKng/edit?gid=0#gid=0";
+        const SHEET_URL = "https://docs.google.com/spreadsheets/d/1PUd7rDu4JxWmDTauXKIWUtL-bQaqnquOlsY6xNpTKng/edit";
 
         function verAdmin() {
             document.getElementById('view-passenger').style.display = 'none';
@@ -68,18 +63,15 @@
         }
 
         function login() {
-            // Mauricio, tu clave es mauricio2026 (puedes cambiarla aquí abajo)
             if(document.getElementById('pass').value === "mauricio2026") {
                 window.location.href = SHEET_URL;
-            } else { 
-                alert("Contraseña incorrecta, Mauricio."); 
-            }
+            } else { alert("Acceso denegado."); }
         }
 
         function activarCamara() {
-            const rut = document.getElementById('rut').value;
-            if(!rut || rut.length < 5) {
-                alert("Por favor, ingresa un RUT válido antes de escanear.");
+            let rut = document.getElementById('rut').value;
+            if(!rut.includes('-')) {
+                alert("Por favor, incluye el guion en tu RUT.");
                 return;
             }
 
@@ -89,39 +81,30 @@
             const scanner = new Html5Qrcode("reader");
             scanner.start(
                 { facingMode: "environment" }, 
-                { fps: 10, qrbox: { width: 250, height: 250 } },
+                { fps: 10, qrbox: 250 },
                 (decodedText) => { 
-                    registrarEmbarque(rut, decodedText);
+                    // Limpieza automática de puntos antes de enviar
+                    const rutLimpio = rut.replace(/\./g, '');
+                    registrarEmbarque(rutLimpio, decodedText);
                     scanner.stop();
                     document.getElementById('reader').style.display = 'none';
-                },
-                (errorMessage) => { /* ignorar errores de lectura constante */ }
-            ).catch(err => {
-                alert("Error al abrir cámara. Asegúrate de dar permisos.");
-                document.getElementById('btn-scan').style.display = 'block';
-            });
+                }
+            );
         }
 
         function registrarEmbarque(rut, bus) {
             const msgElement = document.getElementById('msg');
-            msgElement.innerText = "⌛ Registrando en la base de datos...";
-            msgElement.style.color = "#3b82f6";
+            msgElement.innerText = "Registrando...";
             
             fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ rut: rut, bus: bus })
             }).then(() => {
                 document.getElementById('check').style.display = 'block';
-                msgElement.innerText = "✅ REGISTRADO: " + bus.toUpperCase();
+                msgElement.innerText = "REGISTRADO: " + bus.toUpperCase();
                 msgElement.style.color = "#10b981";
-                
-                // Opcional: Reiniciar formulario después de 5 segundos
-                setTimeout(() => { location.reload(); }, 5000);
-            }).catch(err => {
-                alert("Error de conexión: " + err);
-                msgElement.innerText = "❌ Error al registrar";
+                setTimeout(() => { location.reload(); }, 4000);
             });
         }
     </script>

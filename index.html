@@ -3,113 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Control de Buses QR</title>
+    <title>BusQR - Sistema de Embarque</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { --bg: #0a0f1e; --accent: #3b82f6; --text: #e8edf8; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; text-align: center; }
-        .screen { display: none; padding: 20px; flex-direction: column; min-height: 100vh; }
-        .active { display: flex; }
-        .btn { padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 10px; }
-        .btn-primary { background: var(--accent); color: white; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; background: #151b2e; color: white; box-sizing: border-box; }
-        #reader { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
-        .status-ok { color: #10b981; font-size: 24px; font-weight: bold; }
+        :root { --bg: #0f172a; --card: #1e293b; --accent: #3b82f6; --green: #10b981; --text: #f8fafc; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 400px; }
+        .card { background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); text-align: center; margin-top: 20px; border: 1px solid #334155; }
+        h1 { font-size: 1.6rem; margin-bottom: 5px; color: white; }
+        input { width: 100%; padding: 14px; margin: 15px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; font-size: 16px; outline: none; }
+        input:focus { border-color: var(--accent); }
+        .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-qr { background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-qr:active { transform: scale(0.98); }
+        .btn-admin { background: transparent; color: #94a3b8; margin-top: 30px; font-size: 14px; text-decoration: underline; }
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-top: 15px; display: none; border: 2px solid var(--accent); }
+        .success-mark { display: none; color: var(--green); font-size: 60px; margin-top: 20px; animation: scaleUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes scaleUp { from { transform: scale(0); } to { transform: scale(1); } }
+        .status-text { margin-top: 15px; font-weight: 600; min-height: 24px; }
     </style>
 </head>
 <body>
 
-<div id="homeScreen" class="screen active">
-    <h1>🚌 Control Buses</h1>
-    <button class="btn btn-primary" onclick="showScreen('passengerScreen')">Soy Pasajero - Registrar</button>
-    <button class="btn" style="background:#1e2840; color:white;" onclick="showScreen('loginScreen')">Admin</button>
-</div>
+    <div class="container" id="view-passenger">
+        <div class="card">
+            <div style="font-size: 50px; margin-bottom: 10px;">🚌</div>
+            <h1>Control de Buses</h1>
+            <p style="color: #94a3b8; font-size: 14px;">Ingresa tu RUT para comenzar el embarque</p>
+            
+            <input type="text" id="rut" placeholder="Ej: 12.345.678-9" autocomplete="off">
+            
+            <div id="reader"></div>
+            
+            <button class="btn btn-qr" id="btn-scan" onclick="activarCamara()">
+                📷 CAPTURAR QR DEL BUS
+            </button>
 
-<div id="passengerScreen" class="screen">
-    <h2>Registro de Pasajero</h2>
-    <input type="text" id="passengerRut" placeholder="Ingresa tu RUT (ej: 12345678-9)">
-    <div id="reader" style="display:none;"></div>
-    <button id="startScanBtn" class="btn btn-primary" onclick="startScanner()">Capturar QR del Bus</button>
-    <div id="resultMsg" class="status-ok"></div>
-    <button class="btn" onclick="location.reload()">Volver</button>
-</div>
-
-<div id="loginScreen" class="screen">
-    <h2>Acceso Admin</h2>
-    <input type="password" id="adminPass" placeholder="Contraseña">
-    <button class="btn btn-primary" onclick="checkAdmin()">Entrar como Admin</button>
-    <button class="btn" onclick="showScreen('homeScreen')">Cancelar</button>
-</div>
-
-<div id="adminPanel" class="screen">
-    <h2>Panel de Buses</h2>
-    <p>Selecciona un bus para ver el listado de hoy:</p>
-    <div id="busButtons">
-        <button class="btn btn-primary" onclick="viewBus('Bus 1')">Ver Bus 1</button>
-        <button class="btn btn-primary" onclick="viewBus('Bus 2')">Ver Bus 2</button>
-        <button class="btn btn-primary" onclick="viewBus('Bus 3')">Ver Bus 3</button>
-        <button class="btn btn-primary" onclick="viewBus('Bus 4')">Ver Bus 4</button>
-    </div>
-    <div id="listado"></div>
-    <button class="btn" onclick="location.reload()">Cerrar Sesión</button>
-</div>
-
-<script>
-    let html5QrCode;
-
-    function showScreen(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-    }
-
-    function startScanner() {
-        const rut = document.getElementById('passengerRut').value;
-        if (!rut) return alert("Por favor, ingresa tu RUT primero");
-
-        document.getElementById('reader').style.display = 'block';
-        document.getElementById('startScanBtn').style.display = 'none';
-
-        html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start(
-            { facingMode: "environment" }, 
-            { fps: 10, qrbox: 250 },
-            (decodedText) => { // decodedText será el nombre del bus que tenga el QR
-                sendData(rut, decodedText);
-                html5QrCode.stop();
-                document.getElementById('reader').style.display = 'none';
-            }
-        );
-    }
-
-    function sendData(rut, bus) {
-        document.getElementById('resultMsg').innerHTML = "⌛ Registrando...";
+            <div class="success-mark" id="check">✔</div>
+            <p id="msg" class="status-text"></p>
+        </div>
         
-        // AQUÍ CONECTAREMOS CON TU GOOGLE SHEETS
-        const url = "TU_URL_DE_GOOGLE_APPS_SCRIPT"; 
+        <button class="btn btn-admin" onclick="verAdmin()">Acceso Mauricio (Admin)</button>
+    </div>
 
-        fetch(url, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rut: rut, bus: bus, fecha: new Date().toLocaleString() })
-        }).then(() => {
-            document.getElementById('resultMsg').innerHTML = "✅ REGISTRADO / CHECK";
-        });
-    }
+    <div class="container" id="view-admin" style="display:none;">
+        <div class="card">
+            <div style="font-size: 40px; margin-bottom: 10px;">🔐</div>
+            <h2>Panel Mauricio</h2>
+            <p style="color: #94a3b8; font-size: 14px; margin-bottom: 20px;">Ingresa la clave para ver el listado</p>
+            <input type="password" id="pass" placeholder="Contraseña de Administrador">
+            <button class="btn btn-qr" onclick="login()">ENTRAR AL LISTADO</button>
+            <button class="btn btn-admin" style="text-decoration:none;" onclick="location.reload()">← VOLVER</button>
+        </div>
+    </div>
 
-    function checkAdmin() {
-        if (document.getElementById('adminPass').value === "admin123") {
-            showScreen('adminPanel');
-        } else {
-            alert("Contraseña incorrecta");
+    <script>
+        // CONFIGURACIÓN DE TUS ENLACES REALES
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5h1bxjdxggEhmS2fbzU3Gkx2UNLDZtaxtsDZ9tX5MGgHC3pedLk3P5l80KL9qtgJgAA/exec"; 
+        const SHEET_URL = "https://docs.google.com/spreadsheets/d/1PUd7rDu4JxWmDTauXKIWUtL-bQaqnquOlsY6xNpTKng/edit?gid=0#gid=0";
+
+        function verAdmin() {
+            document.getElementById('view-passenger').style.display = 'none';
+            document.getElementById('view-admin').style.display = 'block';
         }
-    }
 
-    function viewBus(busName) {
-        alert("Consultando registros de " + busName + " en Google Sheets...");
-        // Aquí podrías abrir directamente tu Google Sheet para ver el listado
-        window.open("URL_DE_TU_HOJA_DE_CALCULO_PARA_VER_LISTA", "_blank");
-    }
-</script>
+        function login() {
+            // Mauricio, tu clave es mauricio2026 (puedes cambiarla aquí abajo)
+            if(document.getElementById('pass').value === "mauricio2026") {
+                window.location.href = SHEET_URL;
+            } else { 
+                alert("Contraseña incorrecta, Mauricio."); 
+            }
+        }
+
+        function activarCamara() {
+            const rut = document.getElementById('rut').value;
+            if(!rut || rut.length < 5) {
+                alert("Por favor, ingresa un RUT válido antes de escanear.");
+                return;
+            }
+
+            document.getElementById('reader').style.display = 'block';
+            document.getElementById('btn-scan').style.display = 'none';
+
+            const scanner = new Html5Qrcode("reader");
+            scanner.start(
+                { facingMode: "environment" }, 
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                (decodedText) => { 
+                    registrarEmbarque(rut, decodedText);
+                    scanner.stop();
+                    document.getElementById('reader').style.display = 'none';
+                },
+                (errorMessage) => { /* ignorar errores de lectura constante */ }
+            ).catch(err => {
+                alert("Error al abrir cámara. Asegúrate de dar permisos.");
+                document.getElementById('btn-scan').style.display = 'block';
+            });
+        }
+
+        function registrarEmbarque(rut, bus) {
+            const msgElement = document.getElementById('msg');
+            msgElement.innerText = "⌛ Registrando en la base de datos...";
+            msgElement.style.color = "#3b82f6";
+            
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rut: rut, bus: bus })
+            }).then(() => {
+                document.getElementById('check').style.display = 'block';
+                msgElement.innerText = "✅ REGISTRADO: " + bus.toUpperCase();
+                msgElement.style.color = "#10b981";
+                
+                // Opcional: Reiniciar formulario después de 5 segundos
+                setTimeout(() => { location.reload(); }, 5000);
+            }).catch(err => {
+                alert("Error de conexión: " + err);
+                msgElement.innerText = "❌ Error al registrar";
+            });
+        }
+    </script>
 </body>
 </html>

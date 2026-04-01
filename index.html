@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Control Buses">
+<meta name="theme-color" content="#0a0f1e">
+<link rel="manifest" href="manifest.json">
+<title>Control de Buses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07090f;
+    --surface: #0e1220;
+    --surface2: #151b2e;
+    --border: #1e2840;
+    --accent: #3b82f6;
+    --accent2: #6366f1;
+    --green: #10b981;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --text: #e8edf8;
+    --muted: #6b7a99;
+    --card-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100svh;
+    overflow-x: hidden;
+    font-size: 15px;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; min-height: 100svh; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    padding: 16px 20px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .topbar-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px; font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .topbar-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .icon-btn:active { background: var(--border); }
+
+  /* ── CONTENT ── */
+  .content { flex: 1; padding: 20px; overflow-y: auto; }
+  .content-tight { flex: 1; padding: 16px; overflow-y: auto; }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    display: flex; border-top: 1px solid var(--border);
+    background: var(--surface); padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-item {
+    flex: 1; padding: 12px 8px 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    cursor: pointer; color: var(--muted); transition: color 0.15s;
+    font-size: 10px; font-family: 'DM Sans', sans-serif; font-weight: 500;
+  }
+  .nav-item.active { color: var(--accent); }
+  .nav-icon { font-size: 20px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px; margin-bottom: 12px;
+    box-shadow: var(--card-shadow);
+  }
+  .card-sm {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px; margin-bottom: 8px;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    width: 100%; padding: 15px; border-radius: 12px; border: none;
+    font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s; letter-spacing: 0.2px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+  }
+  .btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+  .btn-secondary {
+    background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-green { background: var(--green); color: white; }
+  .btn-danger { background: var(--red); color: white; }
+  .btn-sm {
+    padding: 10px 16px; width: auto; font-size: 13px;
+    border-radius: 8px;
+  }
+
+  /* ── FORM ELEMENTS ── */
+  label {
+    display: block; font-size: 12px; font-weight: 500;
+    color: var(--muted); margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  input[type="text"], input[type="password"], input[type="number"], select {
+    width: 100%; padding: 14px 16px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 10px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 16px;
+    outline: none; transition: border-color 0.15s; margin-bottom: 14px;
+    appearance: none; -webkit-appearance: none;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7a99' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+  .badge-green { background: rgba(16,185,129,0.15); color: var(--green); }
+  .badge-red { background: rgba(239,68,68,0.15); color: var(--red); }
+  .badge-blue { background: rgba(59,130,246,0.15); color: var(--accent); }
+  .badge-amber { background: rgba(245,158,11,0.15); color: var(--amber); }
+
+  /* ── DIVIDER ── */
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  /* ── STAT GRID ── */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px;
+  }
+  .stat-value {
+    font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800;
+    line-height: 1; margin-bottom: 4px;
+  }
+  .stat-label { font-size: 11px; color: var(--muted); font-weight: 500; }
+
+  /* ── BUS PROGRESS ── */
+  .bus-item { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+  .bus-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .bus-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+  .bus-route { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .progress-bar { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .bus-counts { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--muted); }
+
+  /* ── REGISTRO ITEM ── */
+  .reg-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .reg-name { font-size: 14px; font-weight: 500; }
+  .reg-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .reg-right { text-align: right; }
+
+  /* ── CODE DISPLAY ── */
+  .code-display {
+    font-family: 'DM Mono', monospace;
+    font-size: 52px; font-weight: 500;
+    letter-spacing: 12px; text-align: center;
+    color: var(--accent); padding: 24px;
+    background: var(--surface2); border-radius: 16px;
+    border: 1px solid var(--border); margin: 20px 0;
+  }
+
+  /* ── LOGIN ── */
+  .login-screen {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100svh; padding: 32px 24px;
+    background: radial-gradient(ellipse at top, #0f1a3a 0%, var(--bg) 60%);
+  }
+  .login-logo {
+    font-family: 'Syne', sans-serif; font-size: 52px; font-weight: 800;
+    margin-bottom: 8px; text-align: center;
+  }
+  .login-sub { color: var(--muted); font-size: 14px; text-align: center; margin-bottom: 48px; }
+  .login-form { width: 100%; max-width: 360px; }
+
+  /* ── BOARDING (PASAJERO) ── */
+  .boarding-hero {
+    text-align: center; padding: 28px 20px 20px;
+  }
+  .boarding-icon { font-size: 56px; margin-bottom: 12px; }
+  .boarding-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+  .boarding-sub { color: var(--muted); font-size: 14px; }
+
+  /* ── RESULT FEEDBACK ── */
+  .result-screen {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px; text-align: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .result-screen.show { opacity: 1; pointer-events: all; }
+  .result-icon { font-size: 80px; margin-bottom: 16px; }
+  .result-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+  .result-sub { font-size: 15px; color: var(--muted); margin-bottom: 32px; }
+  .result-ok { background: radial-gradient(ellipse at center, rgba(16,185,129,0.15) 0%, var(--bg) 70%); }
+  .result-warn { background: radial-gradient(ellipse at center, rgba(245,158,11,0.15) 0%, var(--bg) 70%); }
+  .result-error { background: radial-gradient(ellipse at center, rgba(239,68,68,0.15) 0%, var(--bg) 70%); }
+
+  /* ── ALERT ── */
+  .alert { padding: 12px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 14px; }
+  .alert-red { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+  .alert-green { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
+  .alert-blue { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: #93c5fd; }
+
+  /* ── FILE INPUT ── */
+  .file-label {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; padding: 24px; border: 2px dashed var(--border); border-radius: 12px;
+    cursor: pointer; color: var(--muted); font-size: 13px; transition: border-color 0.15s;
+    text-align: center;
+  }
+  .file-label:hover { border-color: var(--accent); }
+  input[type="file"] { display: none; }
+
+  /* ── TABS ── */
+  .tabs { display: flex; background: var(--surface2); border-radius: 10px; padding: 3px; margin-bottom: 16px; }
+  .tab { flex: 1; padding: 9px; text-align: center; font-size: 13px; font-weight: 500; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all 0.15s; }
+  .tab.active { background: var(--surface); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+
+  /* ── MISC ── */
+  .section-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .empty-icon { font-size: 40px; margin-bottom: 10px; }
+  .row { display: flex; gap: 10px; }
+  .row .btn { flex: 1; }
+  
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-up { animation: fadeUp 0.35s ease forwards; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+  .pulse { animation: pulse 2s ease-in-out infinite; }
+
+  /* ── RUT HINT ── */
+  .rut-hint { font-size: 11px; color: var(--muted); margin-top: -10px; margin-bottom: 14px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     LOGIN
+═══════════════════════════════════════════ -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-logo">🚌</div>
+  <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:4px">Control Buses</div>
+  <div class="login-sub">Sistema de gestión de embarque</div>
+  <div class="login-form">
+    <label>Contraseña de administrador</label>
+    <input type="password" id="loginPwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <div id="loginErr" class="alert alert-red" style="display:none">Contraseña incorrecta</div>
+    <button class="btn btn-primary" onclick="doLogin()">Entrar como Admin</button>
+    <div class="divider"></div>
+    <button class="btn btn-secondary" onclick="goPassenger()">Soy Pasajero — Registrar embarque</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     RESULT OVERLAY
+═══════════════════════════════════════════ -->
+<div id="resultOverlay" class="result-screen">
+  <div class="result-icon" id="resultIcon"></div>
+  <div class="result-title" id="resultTitle"></div>
+  <div class="result-sub" id="resultSub"></div>
+  <button class="btn btn-secondary btn-sm" onclick="hideResult()" style="width:180px">← Volver</button>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ADMIN SCREEN
+═══════════════════════════════════════════ -->
+<div id="adminScreen" class="screen">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Panel Admin</div>
+      <div class="topbar-sub" id="adminDateSub">Hoy</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <div class="icon-btn" onclick="exportCSV()" title="Exportar">⬇️</div>
+      <div class="icon-btn" onclick="logout()">🔒</div>
+    </div>
+  </div>
+
+  <div class="content" id="adminContent">
+    <!-- Nav Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="adminTab('panel',this)">Panel</div>
+      <div class="tab" onclick="adminTab('registros',this)">Registros</div>
+      <div class="tab" onclick="adminTab('codigo',this)">Código</div>
+      <div class="tab" onclick="adminTab('config',this)">Config</div>
+    </div>
+
+    <!-- PANEL TAB -->
+    <div id="tab-panel">
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="statTotal" style="color:var(--accent)">0</div>
+          <div class="stat-label">Embarcaron hoy</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statWrong" style="color:var(--red)">0</div>
+          <div class="stat-label">Bus incorrecto</div>
+        </div>
+      </div>
+      <div class="section-title">Buses</div>
+      <div id="busCards"></div>
+    </div>
+
+    <!-- REGISTROS TAB -->
+    <div id="tab-registros" style="display:none">
+      <div class="section-title">Registros del día</div>
+      <div id="regList">
+        <div class="empty-state"><div class="empty-icon">📋</div>Sin registros aún</div>
+      </div>
+    </div>
+
+    <!-- CODIGO TAB -->
+    <div id="tab-codigo" style="display:none">
+      <div class="card" style="text-align:center">
+        <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:6px">Código del día</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Comparte este código con los pasajeros cada mañana</div>
+        <div class="code-display" id="todayCode">----</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px" id="codeDate"></div>
+        <button class="btn btn-primary" onclick="genNewCode()">🔄 Generar nuevo código</button>
+      </div>
+      <div class="alert alert-blue" style="font-size:13px">
+        💡 <strong>Tip:</strong> Envía este código cada mañana por WhatsApp o el canal de tu empresa. Caduca al final del día.
+      </div>
+    </div>
+
+    <!-- CONFIG TAB -->
+    <div id="tab-config" style="display:none">
+      <div class="section-title">Pasajeros</div>
+      <div class="card">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px" id="passCountInfo">No hay pasajeros cargados</div>
+        <label for="xlsxFile" class="file-label">
+          <span style="font-size:24px">📂</span>
+          <span>Cargar Excel de pasajeros</span>
+          <span style="font-size:11px">RUT · NOMBRE · BUS_ASIGNADO</span>
+        </label>
+        <input type="file" id="xlsxFile" accept=".xlsx,.xls,.csv" onchange="loadPassengers(this)">
+      </div>
+
+      <div class="section-title" style="margin-top:16px">Buses y Rutas</div>
+      <div id="busConfigFields"></div>
+
+      <div class="section-title" style="margin-top:16px">Seguridad</div>
+      <div class="card">
+        <label>Nueva contraseña admin</label>
+        <input type="password" id="newPwd1" placeholder="••••••••">
+        <label>Confirmar contraseña</label>
+        <input type="password" id="newPwd2" placeholder="••••••••">
+        <button class="btn btn-secondary" onclick="changePwd()">Cambiar contraseña</button>
+        <div id="pwdMsg" style="margin-top:10px;font-size:13px"></div>
+      </div>
+
+      <div class="section-title" style="margin-top:16px">Datos</div>
+      <div class="card">
+        <button class="btn btn-danger" onclick="clearRecords()">🗑️ Borrar registros de hoy</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PASSENGER SCREEN
+═══════════════════════════════════════════ -->
+<div id="passengerScreen" class="screen">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Embarcar</div>
+      <div class="topbar-sub" id="passengerDateSub">Hoy</div>
+    </div>
+    <div class="icon-btn" onclick="showLogin()">⚙️</div>
+  </div>
+
+  <div class="content">
+    <div class="boarding-hero fade-up">
+      <div class="boarding-icon">🎫</div>
+      <div class="boarding-title">Registro de embarque</div>
+      <div class="boarding-sub">Ingresa tus datos para confirmar tu lugar en el bus</div>
+    </div>
+
+    <div class="card fade-up">
+      <label>Tu RUT</label>
+      <input type="text" id="pasRUT" placeholder="12.345.678-9" maxlength="12" oninput="formatRUT(this)">
+      <div class="rut-hint">Con o sin puntos y guión</div>
+
+      <label>Bus a abordar</label>
+      <select id="pasBus"></select>
+
+      <label>Código del día</label>
+      <input type="text" id="pasCodigo" placeholder="4 dígitos" maxlength="4" inputmode="numeric" pattern="[0-9]*">
+
+      <div id="pasError" class="alert alert-red" style="display:none"></div>
+
+      <button class="btn btn-primary" onclick="doBoard()">✅ Confirmar embarque</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const DB = {
+  get: k => { try { return JSON.parse(localStorage.getItem('bus_'+k)); } catch { return null; } },
+  set: (k,v) => localStorage.setItem('bus_'+k, JSON.stringify(v)),
+};
+
+function getState() {
+  return {
+    pwd: DB.get('pwd') || 'bus2024',
+    buses: DB.get('buses') || [
+      { id:'B1', name:'Bus 1', route:'Ruta Norte' },
+      { id:'B2', name:'Bus 2', route:'Ruta Sur' },
+      { id:'B3', name:'Bus 3', route:'Ruta Este' },
+      { id:'B4', name:'Bus 4', route:'Ruta Oeste' },
+    ],
+    passengers: DB.get('passengers') || [],
+    records: DB.get('records') || [],
+    codeDay: DB.get('codeDay') || null,
+    codeDate: DB.get('codeDate') || null,
+  };
+}
+
+function today() { return new Date().toISOString().split('T')[0]; }
+function nowStr() {
+  const d = new Date();
+  return d.toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' });
+}
+function todayLabel() {
+  return new Date().toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' });
+}
+
+// Ensure code exists for today
+function ensureCode() {
+  const s = getState();
+  if (s.codeDate !== today()) {
+    const code = String(Math.floor(1000 + Math.random() * 9000));
+    DB.set('codeDay', code);
+    DB.set('codeDate', today());
+    return code;
+  }
+  return s.codeDay;
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+function showScreen(id) {
+  ['loginScreen','adminScreen','passengerScreen'].forEach(s => {
+    const el = document.getElementById(s);
+    if (el.classList.contains('screen')) { el.style.display='none'; el.classList.remove('active'); }
+    else el.style.display='none';
+  });
+  const target = document.getElementById(id);
+  if (target.classList.contains('screen')) { target.style.display='flex'; target.classList.add('active'); }
+  else target.style.display='flex';
+}
+
+function showLogin() { showScreen('loginScreen'); }
+function goPassenger() {
+  document.getElementById('passengerDateSub').textContent = todayLabel();
+  renderBusSelect();
+  showScreen('passengerScreen');
+}
+function logout() { showScreen('loginScreen'); }
+
+// ═══════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════
+function doLogin() {
+  const pwd = document.getElementById('loginPwd').value;
+  const s = getState();
+  if (pwd === s.pwd) {
+    document.getElementById('loginPwd').value = '';
+    document.getElementById('loginErr').style.display = 'none';
+    openAdmin();
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+  }
+}
+
+function openAdmin() {
+  document.getElementById('adminDateSub').textContent = todayLabel();
+  ensureCode();
+  renderAdmin();
+  adminTab('panel', document.querySelector('.tab.active'));
+  showScreen('adminScreen');
+}
+
+// ═══════════════════════════════════════════
+// ADMIN TABS
+// ═══════════════════════════════════════════
+let currentTab = 'panel';
+function adminTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['panel','registros','codigo','config'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t === tab ? '' : 'none';
+  });
+  currentTab = tab;
+  renderAdmin();
+}
+
+function renderAdmin() {
+  if (currentTab === 'panel') renderPanel();
+  if (currentTab === 'registros') renderRegistros();
+  if (currentTab === 'codigo') renderCodigo();
+  if (currentTab === 'config') renderConfig();
+}
+
+// ── PANEL ──
+function renderPanel() {
+  const s = getState();
+  const todayRecs = s.records.filter(r => r.date === today());
+  const wrongRecs = todayRecs.filter(r => r.wrongBus);
+
+  document.getElementById('statTotal').textContent = todayRecs.length;
+  document.getElementById('statWrong').textContent = wrongRecs.length;
+
+  const html = s.buses.map(bus => {
+    const boarded = todayRecs.filter(r => r.busBoarded === bus.id && !r.wrongBus).length;
+    const total = s.passengers.filter(p => p.bus === bus.id).length;
+    const pct = total > 0 ? Math.round((boarded/total)*100) : 0;
+    return `
+    <div class="bus-item">
+      <div class="bus-header">
+        <div>
+          <div class="bus-name">${bus.name}</div>
+          <div class="bus-route">${bus.route}</div>
+        </div>
+        <div class="badge ${boarded === total && total > 0 ? 'badge-green' : 'badge-blue'}">${boarded}/${total}</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="bus-counts"><span>${pct}% embarcado</span><span>${total - boarded} pendientes</span></div>
+    </div>`;
+  }).join('');
+  document.getElementById('busCards').innerHTML = html || '<div class="empty-state"><div class="empty-icon">🚌</div>Configura tus buses en la pestaña Config</div>';
+}
+
+// ── REGISTROS ──
+function renderRegistros() {
+  const s = getState();
+  const todayRecs = s.records.filter(r => r.date === today()).reverse();
+  if (!todayRecs.length) {
+    document.getElementById('regList').innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div>Sin registros aún hoy</div>';
+    return;
+  }
+  const html = todayRecs.map(r => `
+    <div class="reg-item" style="${r.wrongBus ? 'border-color:rgba(239,68,68,0.4)' : ''}">
+      <div>
+        <div class="reg-name">${r.nombre}</div>
+        <div class="reg-meta">${r.rut} · ${r.time}</div>
+      </div>
+      <div class="reg-right">
+        <div class="badge ${r.wrongBus ? 'badge-red' : 'badge-green'}" style="margin-bottom:4px">
+          ${r.busBoarded}
+        </div>
+        ${r.wrongBus ? `<div style="font-size:10px;color:var(--red)">esperado ${r.busAssigned}</div>` : ''}
+      </div>
+    </div>`).join('');
+  document.getElementById('regList').innerHTML = html;
+}
+
+// ── CODIGO ──
+function renderCodigo() {
+  const code = ensureCode();
+  document.getElementById('todayCode').textContent = code;
+  document.getElementById('codeDate').textContent = today();
+}
+
+function genNewCode() {
+  if (!confirm('¿Generar un nuevo código? El anterior dejará de funcionar.')) return;
+  DB.set('codeDay', String(Math.floor(1000 + Math.random() * 9000)));
+  DB.set('codeDate', today());
+  renderCodigo();
+}
+
+// ── CONFIG ──
+function renderConfig() {
+  const s = getState();
+  const cnt = s.passengers.length;
+  document.getElementById('passCountInfo').textContent = cnt > 0 ? `✅ ${cnt} pasajeros cargados` : 'No hay pasajeros cargados';
+
+  const html = s.buses.map((bus, i) => `
+    <div class="card-sm" style="margin-bottom:10px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:600">${bus.id}</div>
+      <input type="text" id="bname_${i}" value="${bus.name}" placeholder="Nombre del bus" style="margin-bottom:8px">
+      <input type="text" id="broute_${i}" value="${bus.route}" placeholder="Ruta / descripción">
+      <button class="btn btn-secondary btn-sm" onclick="saveBusConfig(${i})">Guardar</button>
+    </div>`).join('');
+  document.getElementById('busConfigFields').innerHTML = html;
+}
+
+function saveBusConfig(i) {
+  const s = getState();
+  s.buses[i].name = document.getElementById('bname_'+i).value.trim() || s.buses[i].name;
+  s.buses[i].route = document.getElementById('broute_'+i).value.trim();
+  DB.set('buses', s.buses);
+  alert('✅ Bus actualizado');
+}
+
+function changePwd() {
+  const p1 = document.getElementById('newPwd1').value;
+  const p2 = document.getElementById('newPwd2').value;
+  const msg = document.getElementById('pwdMsg');
+  if (!p1 || p1.length < 4) { msg.innerHTML = '<span style="color:var(--red)">Mínimo 4 caracteres</span>'; return; }
+  if (p1 !== p2) { msg.innerHTML = '<span style="color:var(--red)">Las contraseñas no coinciden</span>'; return; }
+  DB.set('pwd', p1);
+  msg.innerHTML = '<span style="color:var(--green)">✅ Contraseña actualizada</span>';
+  document.getElementById('newPwd1').value = '';
+  document.getElementById('newPwd2').value = '';
+}
+
+function clearRecords() {
+  if (!confirm('¿Borrar todos los registros de hoy?')) return;
+  const s = getState();
+  s.records = s.records.filter(r => r.date !== today());
+  DB.set('records', s.records);
+  renderAdmin();
+  alert('Registros borrados');
+}
+
+// ═══════════════════════════════════════════
+// EXCEL LOADER (via SheetJS CDN)
+// ═══════════════════════════════════════════
+let sheetJSLoaded = false;
+function loadSheetJS(cb) {
+  if (sheetJSLoaded) { cb(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+  s.onload = () => { sheetJSLoaded = true; cb(); };
+  document.head.appendChild(s);
+}
+
+function loadPassengers(input) {
+  if (!input.files.length) return;
+  const file = input.files[0];
+  
+  // CSV fallback
+  if (file.name.endsWith('.csv')) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const lines = e.target.result.split('\n').filter(l => l.trim());
+      const headers = lines[0].split(',').map(h => h.trim().toUpperCase());
+      const rutIdx = headers.indexOf('RUT');
+      const nameIdx = headers.indexOf('NOMBRE');
+      const busIdx = headers.indexOf('BUS_ASIGNADO');
+      if (rutIdx<0 || nameIdx<0 || busIdx<0) { alert('El CSV debe tener columnas: RUT, NOMBRE, BUS_ASIGNADO'); return; }
+      const passengers = lines.slice(1).map(l => {
+        const cols = l.split(',');
+        return { rut: normalizeRUT(cols[rutIdx]||''), nombre: (cols[nameIdx]||'').trim(), bus: (cols[busIdx]||'').trim() };
+      }).filter(p => p.rut && p.nombre && p.bus);
+      DB.set('passengers', passengers);
+      alert(`✅ ${passengers.length} pasajeros cargados`);
+      renderAdmin();
+    };
+    reader.readAsText(file);
+    return;
+  }
+
+  loadSheetJS(() => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        
+        const passengers = data.map(row => {
+          const rut = normalizeRUT(String(row['RUT'] || row['rut'] || ''));
+          const nombre = String(row['NOMBRE'] || row['nombre'] || '').trim();
+          const bus = String(row['BUS_ASIGNADO'] || row['bus_asignado'] || row['BUS'] || '').trim().toUpperCase();
+          return { rut, nombre, bus };
+        }).filter(p => p.rut && p.nombre && p.bus);
+
+        if (!passengers.length) { alert('No se encontraron pasajeros. Verifica las columnas: RUT, NOMBRE, BUS_ASIGNADO'); return; }
+        DB.set('passengers', passengers);
+        alert(`✅ ${passengers.length} pasajeros cargados`);
+        renderAdmin();
+      } catch(err) {
+        alert('Error al leer el archivo: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// ═══════════════════════════════════════════
+// PASSENGER BOARDING
+// ═══════════════════════════════════════════
+function renderBusSelect() {
+  const s = getState();
+  const sel = document.getElementById('pasBus');
+  sel.innerHTML = s.buses.map(b => `<option value="${b.id}">${b.name} — ${b.route}</option>`).join('');
+}
+
+function normalizeRUT(rut) {
+  return rut.replace(/[.\s]/g, '').toUpperCase();
+}
+
+function formatRUT(input) {
+  // Allow user to type naturally, just clean obvious issues
+  let v = input.value.replace(/[^0-9kK.\-]/g, '');
+  input.value = v;
+}
+
+function doBoard() {
+  const s = getState();
+  const rawRUT = document.getElementById('pasRUT').value.trim();
+  const busSelected = document.getElementById('pasBus').value;
+  const codigo = document.getElementById('pasCodigo').value.trim();
+  const errEl = document.getElementById('pasError');
+  errEl.style.display = 'none';
+
+  const code = ensureCode();
+
+  function showErr(msg) { errEl.textContent = msg; errEl.style.display = 'block'; }
+
+  if (!rawRUT) { showErr('Ingresa tu RUT'); return; }
+  if (!codigo) { showErr('Ingresa el código del día'); return; }
+  if (codigo !== code) { showErr('Código incorrecto. Solicítalo a tu administrador.'); return; }
+
+  const normRUT = normalizeRUT(rawRUT);
+
+  // Check already boarded today
+  const already = s.records.find(r => r.date === today() && normalizeRUT(r.rut) === normRUT);
+  if (already) {
+    showResult('warn', '⚠️', 'Ya embarcaste hoy', `Registrado a las ${already.time} en ${already.busBoarded}`);
+    return;
+  }
+
+  // Find passenger
+  const passenger = s.passengers.find(p => normalizeRUT(p.rut) === normRUT);
+
+  if (!passenger && s.passengers.length > 0) {
+    showResult('error', '❌', 'RUT no encontrado', 'Tu RUT no está en la lista de pasajeros. Contacta a tu administrador.');
+    return;
+  }
+
+  const wrongBus = passenger && passenger.bus !== busSelected;
+  const record = {
+    date: today(),
+    time: nowStr(),
+    rut: rawRUT,
+    nombre: passenger ? passenger.nombre : rawRUT,
+    busAssigned: passenger ? passenger.bus : busSelected,
+    busBoarded: busSelected,
+    wrongBus,
+  };
+
+  s.records.push(record);
+  DB.set('records', s.records);
+
+  // Clear form
+  document.getElementById('pasRUT').value = '';
+  document.getElementById('pasCodigo').value = '';
+
+  if (wrongBus) {
+    const busName = s.buses.find(b => b.id === passenger.bus)?.name || passenger.bus;
+    showResult('warn', '⚠️', `${record.nombre}`, `Tu bus asignado es ${busName} (${passenger.bus}), no el que seleccionaste.`);
+  } else {
+    const busName = s.buses.find(b => b.id === busSelected)?.name || busSelected;
+    showResult('ok', '✅', `¡Bienvenido, ${record.nombre}!`, `Embarcaste en ${busName}. ¡Buen viaje!`);
+  }
+}
+
+// ═══════════════════════════════════════════
+// RESULT OVERLAY
+// ═══════════════════════════════════════════
+function showResult(type, icon, title, sub) {
+  const overlay = document.getElementById('resultOverlay');
+  overlay.className = 'result-screen result-' + type;
+  document.getElementById('resultIcon').textContent = icon;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultSub').textContent = sub;
+  overlay.classList.add('show');
+  
+  // Auto-hide after 4s
+  setTimeout(hideResult, 4000);
+}
+
+function hideResult() {
+  document.getElementById('resultOverlay').classList.remove('show');
+}
+
+// ═══════════════════════════════════════════
+// EXPORT CSV
+// ═══════════════════════════════════════════
+function exportCSV() {
+  const s = getState();
+  const todayRecs = s.records.filter(r => r.date === today());
+  if (!todayRecs.length) { alert('No hay registros hoy'); return; }
+  
+  const header = 'FECHA,HORA,RUT,NOMBRE,BUS_ASIGNADO,BUS_ABORDADO,BUS_INCORRECTO\n';
+  const rows = todayRecs.map(r =>
+    `${r.date},${r.time},"${r.rut}","${r.nombre}",${r.busAssigned},${r.busBoarded},${r.wrongBus?'SI':'NO'}`
+  ).join('\n');
+  
+  const blob = new Blob(['\uFEFF' + header + rows], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `registros-buses-${today()}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  // Default to passenger screen for quick access
+  goPassenger();
+});
+
+// Keyboard accessibility
+document.getElementById('loginPwd').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+</script>
+</body>
+</html>

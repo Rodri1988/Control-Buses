@@ -3,57 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistema de Control de Embarque QR</title>
+    <title>Sistema Control de Buses</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --accent: #3b82f6; --green: #10b981; --red: #ef4444; --text: #f8fafc; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        :root { --bg: #0f172a; --card: #1e293b; --accent: #3b82f6; --green: #10b981; --text: #f8fafc; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 400px; }
         .card { background: var(--card); padding: 30px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center; margin-top: 20px; border: 1px solid #334155; }
-        h1 { font-size: 1.8rem; margin-bottom: 10px; color: white; letter-spacing: -0.5px; }
-        .subtitle { color: #94a3b8; font-size: 14px; margin-bottom: 20px; line-height: 1.4; }
+        h1 { font-size: 1.8rem; margin-bottom: 8px; color: white; letter-spacing: -0.5px; }
+        .subtitle { color: #94a3b8; font-size: 14px; margin-bottom: 25px; line-height: 1.4; }
         input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: 2px solid #334155; background: #0f172a; color: white; box-sizing: border-box; font-size: 18px; text-align: center; transition: 0.3s; }
         input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); }
-        .btn { width: 100%; padding: 18px; border-radius: 14px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        .btn { width: 100%; padding: 18px; border-radius: 14px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; margin-top: 15px; text-transform: uppercase; letter-spacing: 1px; }
         .btn-qr { background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-qr:active { transform: scale(0.96); }
-        .btn-admin { background: transparent; color: #64748b; margin-top: 40px; font-size: 13px; text-decoration: underline; cursor: pointer; border: none; }
-        #reader { width: 100%; border-radius: 15px; overflow: hidden; margin-top: 20px; display: none; border: 3px solid var(--accent); box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-        .success-mark { display: none; color: var(--green); font-size: 70px; margin-top: 20px; animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .btn-qr:active { transform: scale(0.96); opacity: 0.9; }
+        .btn-admin { background: transparent; color: #475569; margin-top: 40px; font-size: 13px; text-decoration: underline; cursor: pointer; border: none; }
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; margin-top: 20px; display: none; border: 3px solid var(--accent); }
+        .success-mark { display: none; color: var(--green); font-size: 75px; margin-top: 20px; animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
-        .status-text { margin-top: 20px; font-weight: 700; font-size: 18px; }
+        .status-text { margin-top: 20px; font-weight: 700; font-size: 18px; min-height: 24px; }
     </style>
 </head>
 <body>
 
     <div class="container" id="view-passenger">
         <div class="card">
-            <div style="font-size: 60px; margin-bottom: 15px;">🚌</div>
-            <h1>Control de Embarque</h1>
-            <p class="subtitle">Ingresa tu RUT sin puntos y con guion<br><b>Ejemplo: 12345678-9</b></p>
+            <div style="font-size: 60px; margin-bottom: 10px;">🚌</div>
+            <h1>Embarque Rápido</h1>
+            <p class="subtitle">Ingresa tu RUT sin puntos y con guion<br><b>Ej: 12345678-9</b></p>
             
-            <input type="text" id="rut" placeholder="12345678-9" maxlength="12" autocomplete="off">
+            <input type="text" id="rut" placeholder="12345678-9" maxlength="12" spellcheck="false">
             
             <div id="reader"></div>
             
-            <button class="btn btn-qr" id="btn-scan" onclick="procesarValidacion()">
-                📷 ESCANEAR QR DEL BUS
+            <button class="btn btn-qr" id="btn-scan" onclick="procesarInicio()">
+                📷 ESCANEAR QR BUS
             </button>
 
             <div class="success-mark" id="check">✔</div>
             <p id="msg" class="status-text"></p>
         </div>
         
-        <button class="btn btn-admin" onclick="verAdmin()">Acceso Admin</button>
+        <button class="btn btn-admin" onclick="verAdmin()">Accesso Admin</button>
     </div>
 
     <div class="container" id="view-admin" style="display:none;">
         <div class="card">
             <div style="font-size: 40px; margin-bottom: 10px;">🔐</div>
             <h2>Panel de Control</h2>
-            <p class="subtitle">Solo personal autorizado</p>
             <input type="password" id="pass" placeholder="Contraseña Admin">
-            <button class="btn btn-qr" onclick="login()">INGRESAR AL PANEL</button>
+            <button class="btn btn-qr" onclick="login()">ENTRAR AL LISTADO</button>
             <button class="btn btn-admin" style="text-decoration:none;" onclick="location.reload()">← VOLVER</button>
         </div>
     </div>
@@ -70,10 +69,10 @@
         function login() {
             if(document.getElementById('pass').value === "mauricio2026") {
                 window.location.href = SHEET_URL;
-            } else { alert("Acceso denegado: Credenciales inválidas."); }
+            } else { alert("Acceso denegado."); }
         }
 
-        // ALGORITMO MÓDULO 11 PARA VALIDAR RUT CHILENO
+        // VALIDACIÓN MATEMÁTICA DE RUT
         function m11(rut) {
             let s = 1, m = 0;
             for (; rut; rut = Math.floor(rut / 10))
@@ -81,74 +80,51 @@
             return s ? s - 1 : 'k';
         }
 
-        function procesarValidacion() {
-            let rawRut = document.getElementById('rut').value.trim();
-            
-            // 1. Limpieza de puntos y espacios
-            let rutLimpio = rawRut.replace(/\./g, '').replace(/\s+/g, '');
-
-            // 2. Validaciones básicas
-            if (!rutLimpio.includes('-')) {
-                alert("❌ Formato incorrecto. Debes incluir el guion.");
+        function procesarInicio() {
+            let rutRaw = document.getElementById('rut').value.trim().replace(/\./g, '');
+            if (!rutRaw.includes('-')) {
+                alert("⚠️ Error: El RUT debe incluir guion.");
                 return;
             }
-
-            const partes = rutLimpio.split('-');
-            const num = partes[0];
-            const dv = partes[1].toLowerCase();
-
-            if (partes.length !== 2 || isNaN(num)) {
-                alert("❌ RUT Inválido. Ingresa solo números antes del guion.");
+            const partes = rutRaw.split('-');
+            if (m11(partes[0]).toString() !== partes[1].toLowerCase()) {
+                alert("❌ RUT Inválido.");
                 return;
             }
-
-            // 3. Validación matemática
-            if (m11(num).toString() !== dv) {
-                alert("❌ Error: El RUT ingresado es falso o está mal escrito.");
-                return;
-            }
-
-            // Si pasa todo, activamos cámara
-            activarCamara(rutLimpio);
+            abrirEscaner(rutRaw);
         }
 
-        function activarCamara(rutParaEnvio) {
-            document.getElementById('reader').style.display = 'block';
-            document.getElementById('btn-scan').style.display = 'none';
+        function abrirEscaner(rutFinal) {
+            const readerDiv = document.getElementById('reader');
+            const btnScan = document.getElementById('btn-scan');
+            readerDiv.style.display = 'block';
+            btnScan.style.display = 'none';
 
             const scanner = new Html5Qrcode("reader");
-            scanner.start(
-                { facingMode: "environment" }, 
-                { fps: 15, qrbox: 250 },
-                (decodedText) => { 
-                    enviarDatos(rutParaEnvio, decodedText);
-                    scanner.stop();
-                    document.getElementById('reader').style.display = 'none';
-                }
-            ).catch(err => {
-                alert("Error de cámara: Asegúrate de dar permisos.");
-                location.reload();
-            });
-        }
-
-        function enviarDatos(rut, bus) {
-            const msgElement = document.getElementById('msg');
-            msgElement.innerText = "⚡ PROCESANDO REGISTRO...";
-            msgElement.style.color = "#3b82f6";
-            
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({ rut: rut, bus: bus })
-            }).then(() => {
-                document.getElementById('check').style.display = 'block';
-                msgElement.innerText = "✅ ¡PROCESO EXITOSO! \n" + bus.toUpperCase();
-                msgElement.style.color = "#10b981";
+            // 25 FPS para lectura ultra-rápida (Prueba de estrés)
+            scanner.start({ facingMode: "environment" }, { fps: 25, qrbox: 250 }, (busDetectado) => {
                 
-                // Reinicio automático para el siguiente pasajero
-                setTimeout(() => { location.reload(); }, 3500);
+                // LÓGICA DE SEGUNDO PLANO (KEEP-ALIVE)
+                // Enviamos los datos sin esperar respuesta para no retrasar la fila
+                fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    keepalive: true,
+                    body: JSON.stringify({ rut: rutFinal, bus: busDetectado })
+                });
+
+                // Feedback visual instantáneo al usuario
+                scanner.stop();
+                readerDiv.style.display = 'none';
+                document.getElementById('check').style.display = 'block';
+                const msg = document.getElementById('msg');
+                msg.innerText = "✅ REGISTRADO: " + busDetectado.toUpperCase() + "\n¡SUBE AL BUS!";
+                msg.style.color = "#10b981";
+
+                // Reinicio rápido (1.5 seg) para el siguiente pasajero
+                setTimeout(() => { location.reload(); }, 1500);
             }).catch(err => {
-                alert("Error de conexión. Intenta de nuevo.");
+                alert("Error de cámara.");
                 location.reload();
             });
         }
